@@ -154,6 +154,15 @@ module Swagger
           operations[:method] = verb
           operations[:nickname] = "#{path.camelize}##{action}"
 
+           if operations[:items]
+            operations[:items] = get_items(operations[:items])
+            operations[:type] = 'array'
+          end
+
+          if (operations[:parameters] || []).any? { |parameter| parameter[:type].to_s.downcase == 'file'}
+            operations[:consumes] = ["multipart/form-data"]
+          end
+
           api_path = transform_spec_to_api_path(route.path.spec, settings[:controller_base_path], config[:api_extension_type])
           operations[:parameters] = filter_path_params(api_path, operations[:parameters]) if operations[:parameters]
 
@@ -161,6 +170,14 @@ module Swagger
           models = get_klass_models(klass)
 
           {apis: apis, models: models}
+        end
+
+        def get_items(item)
+          if item[:model]
+            { '$ref' => item[:model] }
+          elsif item[:type]
+            { 'type' => item[:type] }
+          end
         end
 
         def get_klass_models(klass)

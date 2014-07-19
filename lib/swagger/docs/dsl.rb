@@ -16,7 +16,7 @@ module Swagger
       def summary(text)
         @summary = text
       end
-      
+
       def notes(text)
         @notes = text
       end
@@ -37,6 +37,10 @@ module Swagger
         @parameters ||= []
       end
 
+      def items(items)
+        @items = items
+      end
+
       def param(param_type, name, type, required, description = nil, hash={})
         parameters << {:param_type => param_type, :name => name, :type => type,
           :description => description, :required => required == :required}.merge(hash)
@@ -55,10 +59,12 @@ module Swagger
       def response(status, text = nil, model = nil)
         if status.is_a? Symbol
           status_code = Rack::Utils.status_code(status)
-          response_messages << {:code => status_code, :message => text || status.to_s.titleize}
+          response_message = {:code => status_code, :message => text || status.to_s.titleize}
         else
-          response_messages << {:code => status, :message => text}
+          response_message = {:code => status, :message => text}
         end
+        response_message[:responseModel] = model if model
+        response_messages << response_message
         response_messages.sort_by!{|i| i[:code]}
       end
     end
